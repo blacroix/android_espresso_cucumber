@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Espresso_Cucumber</string>
+    <string name="text_welcome">Welcome on Espresso Cucumber Workshop</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_login">Login</string>
+    <string name="button_login">login</string>
+    <string name="message_error_login">Wrong login please use same username and password ;)</string>
+</resources>

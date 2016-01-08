@@ -1,0 +1,141 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+buildscript {
+    ext.kotlin_version = '1.0.0-beta-4584'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath(
+                "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version",
+                "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
+        )
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
+
+    defaultConfig {
+        applicationId "fr.blacroix.android.espresso_cucumber"
+        minSdkVersion 21
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+
+        multiDexEnabled true
+
+        // To avoid <No CucumberOptions annotation> testing applicationId must differ from applicationId
+        testApplicationId 'fr.blacroix.android.espresso_cucumber.test'
+        testInstrumentationRunner 'fr.blacroix.android.espresso_cucumber.test.runner.CucumberTestRunner'
+    }
+
+    sourceSets {
+        androidTest {
+            assets.srcDirs = ['src/androidTest/assets']
+        }
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    testBuildType 'integration'
+
+    packagingOptions {
+        exclude 'META-INF/maven/com.google.guava/guava/pom.properties'
+        exclude 'META-INF/maven/com.google.guava/guava/pom.xml'
+        exclude 'META-INF/services/javax.annotation.processing.Processor'
+    }
+
+    buildTypes {
+        integration {
+            signingConfig signingConfigs.debug
+        }
+
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile(
+            'com.android.support:appcompat-v7:23.1.1',
+            'com.android.support:recyclerview-v7:23.1.1',
+            'com.android.support:multidex:1.0.0',
+
+            // Kotlin
+            "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    )
+
+    androidTestCompile(
+            'com.android.support:support-annotations:23.1.1',
+
+            'com.android.support:multidex:1.0.0',
+
+            // Cucumber JVM
+            'info.cukes:cucumber-jvm-deps:1.0.3',
+
+            // Screenshot
+            'com.squareup.spoon:spoon-client:1.2.0',
+            'com.jraska:falcon-spoon-compat:0.3.1'
+    )
+
+    androidTestCompile('com.android.support.test:runner:0.4') {
+        exclude module: 'support-annotations'
+    }
+
+    androidTestCompile('com.android.support.test:rules:0.4') {
+        exclude module: 'support-annotations'
+    }
+
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.1') {
+        exclude module: 'support-annotations'
+    }
+
+    androidTestCompile('com.android.support.test.espresso:espresso-contrib:2.2.1') {
+        exclude module: 'support-annotations'
+        exclude group: 'com.android.support', module: 'appcompat'
+        exclude group: 'com.android.support', module: 'support-v4'
+        exclude module: 'recyclerview-v7'
+    }
+
+    androidTestCompile('info.cukes:cucumber-android:1.2.4') {
+        exclude module: 'cucumber-jvm-deps'
+    }
+
+    androidTestCompile('info.cukes:cucumber-picocontainer:1.2.4') {
+        exclude module: 'cucumber-jvm-deps'
+    }
+}
+
+// Retrieve report from terminal
+// Replace stylesheet with a better one
+gradle.taskGraph.afterTask { task, TaskState state ->
+    if (task == connectedIntegrationAndroidTest) {
+        def reportDir = new File(project.buildDir, "cucumber-reports")
+        if (!reportDir.exists()) {
+            reportDir.mkdirs()
+        }
+        println "Retrieving Cucumber test report to ${project.buildDir}"
+        def retrieveReportProcess = new ProcessBuilder(
+                ['adb', 'pull', "/mnt/sdcard/fr.blacroix.android.espresso_cucumber.test/cucumber-reports/report-html", reportDir.getAbsolutePath()]
+        )
+        def process = retrieveReportProcess.start()
+        process.waitFor()
+
+        def destPath = "${reportDir.getAbsolutePath()}/style.css"
+        def sourcePath = "${project.projectDir}/../assets/style.css"
+        println "Replacing $destPath with $sourcePath"
+        retrieveReportProcess = new ProcessBuilder(
+                'cp', sourcePath, destPath
+        )
+        process = retrieveReportProcess.start()
+        process.waitFor()
+    }
+}

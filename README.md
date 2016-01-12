@@ -11,7 +11,7 @@ Complete `StepDefinitions.java` as expected to be create IT
 3. scroll to item
 4. open item
 
-## Useful concerns
+## Useful concern
 
 1. dependencies see app/build.gradle
 2. configure Cucumber in CucumberConfig.java

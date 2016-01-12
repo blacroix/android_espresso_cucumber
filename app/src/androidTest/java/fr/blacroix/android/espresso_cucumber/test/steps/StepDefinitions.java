@@ -3,10 +3,12 @@ package fr.blacroix.android.espresso_cucumber.test.steps;
 import android.support.test.InstrumentationRegistry;
 import android.test.ActivityInstrumentationTestCase2;
 
+import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import fr.blacroix.android.espresso_cucumber.LoginActivity;
+import fr.blacroix.android.espresso_cucumber.test.tools.ActivityKiller;
 
 public class StepDefinitions extends ActivityInstrumentationTestCase2<LoginActivity> {
 
@@ -20,6 +22,12 @@ public class StepDefinitions extends ActivityInstrumentationTestCase2<LoginActiv
 
         injectInstrumentation(InstrumentationRegistry.getInstrumentation());
         getActivity();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        ActivityKiller.killOpenActivities();
+        super.tearDown();
     }
 
     @Given("^I am on login screen$")
